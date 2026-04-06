@@ -267,18 +267,19 @@ app.get('/', (req, res) => {
 
 // MCP JSON-RPC endpoint
 app.post('/mcp', async (req, res) => {
-  // Auth check
-  const apiKey = req.headers['x-api-key'];
-  if (apiKey !== MCP_API_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  const { jsonrpc, id, method, params } = req.body;
-
-  // Set headers for MCP
   res.setHeader('Content-Type', 'application/json');
-
+  let id;
   try {
+    // Auth check
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey !== MCP_API_KEY) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const body = req.body || {};
+    id = body.id;
+    const { method, params } = body;
+
     let result;
 
     if (method === 'initialize') {
@@ -288,7 +289,6 @@ app.post('/mcp', async (req, res) => {
         serverInfo: { name: 'helpscout-mcp', version: '1.0.0' },
       };
     } else if (method === 'notifications/initialized') {
-      // No response needed for notifications
       return res.status(204).end();
     } else if (method === 'tools/list') {
       result = { tools: TOOLS };
@@ -310,7 +310,7 @@ app.post('/mcp', async (req, res) => {
 
     res.json({ jsonrpc: '2.0', id, result });
   } catch (err) {
-    console.error(`Error handling ${method}:`, err.message);
+    console.error('MCP error:', err.message);
     res.json({
       jsonrpc: '2.0',
       id,
