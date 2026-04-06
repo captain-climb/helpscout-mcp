@@ -2,7 +2,13 @@ import express from 'express';
 
 const app = express();
 app.use(express.json());
-
+app.get('/mcp', (req, res) => {
+     res.setHeader('Content-Type', 'text/event-stream');
+     res.setHeader('Cache-Control', 'no-cache');
+     res.flushHeaders();
+     const ka = setInterval(() => res.write(': ping\n\n'), 20000);
+     req.on('close', () => clearInterval(ka));
+   });
 const PORT = process.env.PORT || 3000;
 const MCP_API_KEY = process.env.MCP_API_KEY || 'helpscout-mcp-secret-2024';
 const HELPSCOUT_APP_ID = process.env.HELPSCOUT_APP_ID;
